@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sports Hall Booking - ServiceNow Service Portal</title>
+  <!-- Google Fonts & FontAwesome for icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="light-theme">
+  <!-- ServiceNow System Top Navbar -->
+  <header class="sn-navbar">
+    <div class="nav-container">
+      <div class="nav-left">
+        <div class="sn-logo">
+          <i class="fa-solid fa-bolt logo-icon"></i>
+          <span>service<strong>now</strong></span>
+        </div>
+        <div class="vertical-divider"></div>
+        <span class="portal-title">Service Portal</span>
+      </div>
+      <div class="nav-center">
+        <ul class="nav-menu">
+          <li class="active"><a href="#"><i class="fa-solid fa-house"></i> Home</a></li>
+          <li><a href="#"><i class="fa-solid fa-book"></i> Knowledge Base</a></li>
+          <li><a href="#"><i class="fa-solid fa-cart-shopping"></i> Request Catalog</a></li>
+          <li><a href="#"><i class="fa-solid fa-circle-question"></i> Help Support</a></li>
+        </ul>
+      </div>
+      <div class="nav-right">
+        <div class="notification-bell" id="notificationBellBtn">
+          <i class="fa-regular fa-bell"></i>
+          <span class="badge" id="notificationBadge">0</span>
+        </div>
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Theme">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        <div class="user-profile">
+          <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100&auto=format&fit=crop" alt="User Avatar" class="avatar">
+          <div class="user-info">
+            <span class="user-name">System Administrator</span>
+            <span class="user-role">shbs_admin, shbs_user</span>
+          </div>
+          <i class="fa-solid fa-chevron-down profile-arrow"></i>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ServiceNow Portal Hero Section -->
+  <section class="portal-hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1>Sports Hall Reservation Portal</h1>
+      <p>Reserve court slots, manage your bookings, and coordinate games seamlessly within the company facilities.</p>
+      <div class="search-container">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" placeholder="Search facilities, guidelines, or booking policies..." id="portalSearch">
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Grid Layout -->
+  <main class="portal-body">
+    <div class="portal-container">
+      
+      <!-- LEFT COLUMN: User Portal Widget -->
+      <section class="portal-widget-card" id="userBookingWidget">
+        <div class="card-header-bar">
+          <h2><i class="fa-solid fa-calendar-check text-primary"></i> Sports Hall Booking Widget</h2>
+          <span class="widget-badge">ID: widget-shbs-booking</span>
+        </div>
+        
+        <div class="widget-tabs">
+          <button class="w-tab active" id="tabNewBookingBtn" onclick="switchWidgetTab('new-booking')">
+            <i class="fa-solid fa-plus-circle"></i> New Reservation
+          </button>
+          <button class="w-tab" id="tabMyBookingsBtn" onclick="switchWidgetTab('my-bookings')">
+            <i class="fa-solid fa-list-check"></i> My Bookings 
+            <span class="count-badge" id="myBookingsCount">0</span>
+          </button>
+        </div>
+
+        <!-- Tab Content 1: New Booking -->
+        <div class="tab-pane active" id="paneNewBooking">
+          <!-- Step 1: Select Facility -->
+          <div class="booking-section">
+            <h3 class="section-title"><span class="step-num">1</span> Choose Sports Facility</h3>
+            <div class="facility-grid" id="facilitySelector">
+              <!-- Facilities dynamically generated -->
+            </div>
+          </div>
+
+          <!-- Step 2: Date Selector & Slot Grid -->
+          <div class="booking-section select-date-slots hidden" id="dateSlotSection">
+            <h3 class="section-title"><span class="step-num">2</span> Select Date & Time Slots</h3>
+            
+            <div class="date-picker-row">
+              <label for="bookingDate">Reservation Date:</label>
+              <div class="date-input-wrapper">
+                <i class="fa-solid fa-calendar-days date-icon"></i>
+                <input type="date" id="bookingDate" min="" required>
+              </div>
+              <span class="info-note"><i class="fa-solid fa-info-circle"></i> Max 7 days in advance booking allowed.</span>
+            </div>
+
+            <div class="slots-container">
+              <div class="slots-header">
+                <h4>Available Time Slots</h4>
+                <div class="slots-legend">
+                  <span class="legend-item"><span class="legend-dot available"></span> Available</span>
+                  <span class="legend-item"><span class="legend-dot booked"></span> Booked</span>
+                  <span class="legend-item"><span class="legend-dot pending"></span> Pending Approval</span>
+                  <span class="legend-item"><span class="legend-dot maintenance"></span> Maintenance</span>
+                </div>
+              </div>
+              <div class="slots-grid" id="slotsGrid">
+                <!-- Slots will be rendered here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Reservation Details Form -->
+          <div class="booking-section request-form-section hidden" id="requestFormSection">
+            <h3 class="section-title"><span class="step-num">3</span> Complete Reservation Request</h3>
+            <form id="bookingRequestForm" onsubmit="handleFormSubmit(event)">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="requesterName"><i class="fa-solid fa-user"></i> Requester Name</label>
+                  <input type="text" id="requesterName" value="System Administrator" readonly class="readonly-input">
+                </div>
+                <div class="form-group">
+                  <label for="requesterDept"><i class="fa-solid fa-users"></i> Department</label>
+                  <input type="text" id="requesterDept" value="Information Technology" readonly class="readonly-input">
+                </div>
+                <div class="form-group full-width">
+                  <label for="bookingPurpose"><i class="fa-solid fa-message"></i> Booking Purpose / Event Description *</label>
+                  <textarea id="bookingPurpose" placeholder="E.g., Department Badminton Practice, Team Bonding Session" required minlength="5"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="attendeeCount"><i class="fa-solid fa-user-group"></i> Estimated Attendees *</label>
+                  <input type="number" id="attendeeCount" min="1" max="20" placeholder="Number of players" required>
+                </div>
+                <div class="form-group">
+                  <label for="approverSelect"><i class="fa-solid fa-user-tie"></i> Assigned Approver (Team Lead) *</label>
+                  <select id="approverSelect" required>
+                    <option value="john.lead@company.com">John Doe (IT Team Lead)</option>
+                    <option value="sarah.manager@company.com">Sarah Connor (Facilities Manager)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Cost Estimator Panel -->
+              <div class="cost-estimator-panel" id="costEstimator">
+                <div class="cost-row">
+                  <span>Standard Rate (per slot/hour):</span>
+                  <span id="rateValue">$0.00</span>
+                </div>
+                <div class="cost-row">
+                  <span>Selected Time Slots:</span>
+                  <span id="slotsCountValue">0 slots</span>
+                </div>
+                <hr>
+                <div class="cost-row total">
+                  <span>Total Estimated Charge:</span>
+                  <span id="totalCostValue">$0.00</span>
+                </div>
+                <p class="cost-note">* This is an internal chargeback code simulation. No real money will be charged.</p>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="resetBookingForm()"><i class="fa-solid fa-rotate-left"></i> Reset Form</button>
+                <button type="submit" class="btn btn-primary" id="submitBookingBtn"><i class="fa-solid fa-paper-plane"></i> Submit Reservation Request</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Tab Content 2: My Bookings -->
+        <div class="tab-pane" id="paneMyBookings">
+          <div class="bookings-table-wrapper">
+            <table class="bookings-table">
+              <thead>
+                <tr>
+                  <th>Number</th>
+                  <th>Facility</th>
+                  <th>Date</th>
+                  <th>Time Slot(s)</th>
+                  <th>Approver</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="myBookingsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+            <div class="empty-state" id="myBookingsEmpty">
+              <i class="fa-solid fa-calendar-xmark empty-icon"></i>
+              <p>You have no bookings recorded. Navigate to "New Reservation" to request a slot.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: Developer Hub & Approver Panel -->
+      <section class="portal-widget-card" id="developerHubWidget">
+        <div class="card-header-bar dev-header">
+          <h2><i class="fa-solid fa-code text-secondary"></i> ServiceNow Developer & Approver Hub</h2>
+          <span class="widget-badge secondary">System Admin Console</span>
+        </div>
+
+        <div class="dev-tabs">
+          <button class="dev-tab active" id="devTabApprover" onclick="switchDevTab('approver')">
+            <i class="fa-solid fa-user-check"></i> Approvals
+            <span class="count-badge danger" id="pendingApprovalsCount">0</span>
+          </button>
+          <button class="dev-tab" id="devTabSchema" onclick="switchDevTab('schema')">
+            <i class="fa-solid fa-database"></i> Schema
+          </button>
+          <button class="dev-tab" id="devTabFlow" onclick="switchDevTab('flow')">
+            <i class="fa-solid fa-diagram-project"></i> Flows
+          </button>
+          <button class="dev-tab" id="devTabJobs" onclick="switchDevTab('jobs')">
+            <i class="fa-solid fa-clock"></i> Jobs & Rules
+          </button>
+          <button class="dev-tab" id="devTabApi" onclick="switchDevTab('api')">
+            <i class="fa-solid fa-terminal"></i> API Sandbox
+          </button>
+          <button class="dev-tab" id="devTabUpdateSet" onclick="switchDevTab('update-set')">
+            <i class="fa-solid fa-download"></i> Update Set
+          </button>
+        </div>
+
+        <!-- Dev Pane 1: Approvals Console -->
+        <div class="dev-pane active" id="devPaneApprover">
+          <div class="pane-intro">
+            <h3><i class="fa-solid fa-user-tie"></i> Team Lead / Approver View</h3>
+            <p>Review booking requests sent from the portal. In a real ServiceNow environment, this is managed by the <strong>sysapproval_approver</strong> engine via Flow Designer approvals.</p>
+          </div>
+
+          <div class="approvals-list" id="approvalsList">
+            <!-- Dynamic approvals will appear here -->
+          </div>
+          <div class="empty-state" id="approvalsEmpty">
+            <i class="fa-solid fa-circle-check empty-icon text-success"></i>
+            <p>All clear! There are no pending approvals awaiting your action.</p>
+          </div>
+        </div>
+
+        <!-- Dev Pane 2: Table Schema Explorer -->
+        <div class="dev-pane" id="devPaneSchema">
+          <div class="pane-intro">
+            <h3><i class="fa-solid fa-database"></i> Data Dictionary Schema (`sys_db_object`)</h3>
+            <p>Relational model showing custom ServiceNow tables created for the Sports Hall Booking System application scope (`x_shbs`). Click a table header to explore schema columns.</p>
+          </div>
+
+          <div class="schema-layout">
+            <div class="schema-table-card card-collapsible active" id="schemaTableSportsHall">
+              <div class="table-header" onclick="toggleSchemaCard('schemaTableSportsHall')">
+                <span class="db-table-name">x_shbs_sports_hall</span>
+                <span class="db-table-label">Sports Hall Facility</span>
+                <i class="fa-solid fa-chevron-up toggle-arrow"></i>
+              </div>
+              <div class="table-columns">
+                <table>
+                  <thead>
+                    <tr><th>Column (Database Name)</th><th>Label</th><th>Type</th><th>Key / Ref</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>sys_id</td><td>Sys ID</td><td>GUID</td><td>PK</td></tr>
+                    <tr><td>name</td><td>Facility Name</td><td>String (100)</td><td></td></tr>
+                    <tr><td>type</td><td>Sport Type</td><td>Choice</td><td></td></tr>
+                    <tr><td>hourly_rate</td><td>Hourly Rate</td><td>Decimal</td><td></td></tr>
+                    <tr><td>capacity</td><td>Max Capacity</td><td>Integer</td><td></td></tr>
+                    <tr><td>status</td><td>Operational Status</td><td>Choice</td><td></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="schema-table-card card-collapsible active" id="schemaTableBooking">
+              <div class="table-header" onclick="toggleSchemaCard('schemaTableBooking')">
+                <span class="db-table-name">x_shbs_booking</span>
+                <span class="db-table-label">Booking Request</span>
+                <i class="fa-solid fa-chevron-up toggle-arrow"></i>
+              </div>
+              <div class="table-columns">
+                <table>
+                  <thead>
+                    <tr><th>Column (Database Name)</th><th>Label</th><th>Type</th><th>Key / Ref</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>sys_id</td><td>Sys ID</td><td>GUID</td><td>PK</td></tr>
+                    <tr><td>number</td><td>Booking Number</td><td>String (Auto)</td><td>Unique</td></tr>
+                    <tr><td>facility</td><td>Selected Facility</td><td>Reference</td><td>FK -> x_shbs_sports_hall</td></tr>
+                    <tr><td>booking_date</td><td>Booking Date</td><td>Date</td><td></td></tr>
+                    <tr><td>slots</td><td>Time Slots</td><td>String (CSV/IDs)</td><td></td></tr>
+                    <tr><td>requester</td><td>Requested By</td><td>Reference</td><td>FK -> sys_user</td></tr>
+                    <tr><td>approver</td><td>Assigned Approver</td><td>Reference</td><td>FK -> sys_user</td></tr>
+                    <tr><td>purpose</td><td>Purpose of Booking</td><td>String (1000)</td><td></td></tr>
+                    <tr><td>attendees</td><td>Number of Attendees</td><td>Integer</td><td></td></tr>
+                    <tr><td>total_cost</td><td>Total Cost</td><td>Decimal</td><td></td></tr>
+                    <tr><td>status</td><td>Booking Status</td><td>Choice</td><td>Default: requested</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="schema-table-card card-collapsible active" id="schemaTableSlot">
+              <div class="table-header" onclick="toggleSchemaCard('schemaTableSlot')">
+                <span class="db-table-name">x_shbs_slot</span>
+                <span class="db-table-label">Court Time Slots</span>
+                <i class="fa-solid fa-chevron-up toggle-arrow"></i>
+              </div>
+              <div class="table-columns">
+                <table>
+                  <thead>
+                    <tr><th>Column (Database Name)</th><th>Label</th><th>Type</th><th>Key / Ref</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>sys_id</td><td>Sys ID</td><td>GUID</td><td>PK</td></tr>
+                    <tr><td>facility</td><td>Sport Facility</td><td>Reference</td><td>FK -> x_shbs_sports_hall</td></tr>
+                    <tr><td>start_time</td><td>Start Time</td><td>Time</td><td></td></tr>
+                    <tr><td>end_time</td><td>End Time</td><td>Time</td><td></td></tr>
+                    <tr><td>display_label</td><td>Display Label</td><td>String</td><td></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dev Pane 3: Flow Designer Flow Simulator -->
+        <div class="dev-pane" id="devPaneFlow">
+          <div class="pane-intro">
+            <h3><i class="fa-solid fa-diagram-project"></i> Flow Designer Workflow Execution</h3>
+            <p>Visual mapping of the Flow Designer triggers and actions that automate validation, approval routing, notifications, and status transitions on submission of a new record in `x_shbs_booking`.</p>
+          </div>
+
+          <div class="flow-designer-container">
+            <div class="flow-step" id="flowStepTrigger">
+              <div class="flow-step-marker"><i class="fa-solid fa-play"></i></div>
+              <div class="flow-step-details">
+                <span class="step-category">TRIGGER</span>
+                <h4>Record Created on x_shbs_booking</h4>
+                <p>Runs when status is set to 'Requested'.</p>
+              </div>
+              <div class="flow-step-status"><i class="fa-solid fa-circle-check text-success"></i> Active</div>
+            </div>
+
+            <div class="flow-step-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+
+            <div class="flow-step" id="flowStepAction1">
+              <div class="flow-step-marker">1</div>
+              <div class="flow-step-details">
+                <span class="step-category">ACTION</span>
+                <h4>Check for Double Booking Conflicts</h4>
+                <p>Server-side script checks if any conflicting bookings on the same facility and slots exist with 'Requested' or 'Approved' status.</p>
+              </div>
+              <div class="flow-step-status"><i class="fa-solid fa-circle-check text-success"></i> Auto-validates</div>
+            </div>
+
+            <div class="flow-step-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+
+            <div class="flow-step" id="flowStepAction2">
+              <div class="flow-step-marker">2</div>
+              <div class="flow-step-details">
+                <span class="step-category">ACTION</span>
+                <h4>Ask for Approval</h4>
+                <p>Creates approval task assigned to requester's selected team lead (`sysapproval_approver`). Logs state to visualizer.</p>
+              </div>
+              <div class="flow-step-status state-pending" id="flowApprovalStatus">Idle</div>
+            </div>
+
+            <div class="flow-step-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+
+            <div class="flow-branch-row">
+              <div class="flow-branch branch-approve">
+                <span class="branch-label text-success"><i class="fa-solid fa-check"></i> IF APPROVED</span>
+                <div class="flow-step mini-step">
+                  <div class="flow-step-marker"><i class="fa-solid fa-circle-chevron-right"></i></div>
+                  <div class="flow-step-details">
+                    <h4>Update Booking Status</h4>
+                    <p>Change record status to 'Approved' and lock slot allocation.</p>
+                  </div>
+                </div>
+                <div class="flow-step-arrow mini-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                <div class="flow-step mini-step">
+                  <div class="flow-step-marker"><i class="fa-solid fa-envelope"></i></div>
+                  <div class="flow-step-details">
+                    <h4>Send Confirmation Notification</h4>
+                    <p>Trigger email template to requester with facility booking pass.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flow-branch branch-reject">
+                <span class="branch-label text-danger"><i class="fa-solid fa-xmark"></i> IF REJECTED</span>
+                <div class="flow-step mini-step">
+                  <div class="flow-step-marker"><i class="fa-solid fa-circle-chevron-right"></i></div>
+                  <div class="flow-step-details">
+                    <h4>Update Booking Status</h4>
+                    <p>Change record status to 'Rejected' and free slot availability.</p>
+                  </div>
+                </div>
+                <div class="flow-step-arrow mini-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                <div class="flow-step mini-step">
+                  <div class="flow-step-marker"><i class="fa-solid fa-envelope"></i></div>
+                  <div class="flow-step-details">
+                    <h4>Send Rejection Notification</h4>
+                    <p>Email requester containing approver comments/reason for rejection.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dev Pane 4: Scheduled Jobs & Rules -->
+        <div class="dev-pane" id="devPaneJobs">
+          <div class="pane-intro">
+            <h3><i class="fa-solid fa-clock"></i> Scheduled Jobs & Client/Server Policies</h3>
+            <p>Explore the background rules and scheduled jobs automating the Sports Hall booking operations behind the scenes.</p>
+          </div>
+
+          <div class="jobs-grid">
+            <div class="job-card">
+              <div class="job-card-header">
+                <h4><i class="fa-solid fa-gears text-primary"></i> Scheduled Script Execution (Scheduled Job)</h4>
+                <span class="job-frequency">Runs Daily at 01:00 AM</span>
+              </div>
+              <h5 class="job-name">SHBS Facility Auto-Maintenance Checker</h5>
+              <p class="job-description">Scans slots for regular weekly maintenance schedules. Sets affected slot allocations to 'Maintenance' state, preventing user bookings for those specific times.</p>
+              <div class="job-code-snippet">
+                <pre><code>// ServiceNow Server Script
+var grSlot = new GlideRecord('x_shbs_slot');
+grSlot.addQuery('maintenance_day', new GlideDateTime().getDayOfWeekUTC());
+grSlot.query();
+while(grSlot.next()) {
+    grSlot.status = 'maintenance';
+    grSlot.update();
+}</code></pre>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="triggerScheduledJob('maintenance')"><i class="fa-solid fa-play"></i> Force Run Job Now</button>
+            </div>
+
+            <div class="job-card">
+              <div class="job-card-header">
+                <h4><i class="fa-solid fa-gears text-warning"></i> Scheduled Script Execution (Scheduled Job)</h4>
+                <span class="job-frequency">Runs Every 30 Minutes</span>
+              </div>
+              <h5 class="job-name">SHBS Unapproved / Idle Reservation Expirer</h5>
+              <p class="job-description">Finds booking requests that have been pending approval for more than 48 hours, changes their status to 'Cancelled', and notifications are dispatched to both requester and approver.</p>
+              <div class="job-code-snippet">
+                <pre><code>// Auto-cancels stale bookings
+var grBooking = new GlideRecord('x_shbs_booking');
+grBooking.addQuery('status', 'requested');
+grBooking.addQuery('sys_created_on', '<', gs.daysAgo(2));
+grBooking.query();
+while(grBooking.next()) {
+    grBooking.status = 'cancelled';
+    grBooking.comments = 'System automatically closed request due to inactivity (48h limit).';
+    grBooking.update();
+}</code></pre>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="triggerScheduledJob('expire')"><i class="fa-solid fa-play"></i> Force Run Job Now</button>
+            </div>
+
+            <div class="job-card">
+              <div class="job-card-header">
+                <h4><i class="fa-solid fa-shield-halved text-success"></i> Client Scripts & Business Rules</h4>
+                <span class="job-frequency">Active Policies</span>
+              </div>
+              <div class="rules-list">
+                <div class="rule-item">
+                  <span class="badge badge-info">Client Script</span>
+                  <strong>onChange: Booking Date</strong>
+                  <p>Ensures dates chosen are not in the past and no more than 7 days in advance.</p>
+                </div>
+                <div class="rule-item">
+                  <span class="badge badge-warning">Business Rule</span>
+                  <strong>before insert/update (x_shbs_booking)</strong>
+                  <p>Enforces conflict-validation at DB level: rejects transaction if duplicate booking overlaps.</p>
+                </div>
+                <div class="rule-item">
+                  <span class="badge badge-error">Access Control (ACL)</span>
+                  <strong>Read / Create (x_shbs_booking)</strong>
+                  <p>Restricted so users can only view their own bookings, while approver can see all requested for their scope.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dev Pane 5: REST API Explorer -->
+        <div class="dev-pane" id="devPaneApi">
+          <div class="pane-intro">
+            <h3><i class="fa-solid fa-terminal"></i> ServiceNow REST API Sandbox</h3>
+            <p>Interact with custom scripted REST API endpoints defined under the `/api/x_shbs/booking` namespace. Send GET and POST requests to see simulated JSON payloads.</p>
+          </div>
+
+          <div class="api-sandbox-grid">
+            <div class="api-selector-panel">
+              <div class="form-group">
+                <label for="apiEndpointSelect">Select API Endpoint</label>
+                <select id="apiEndpointSelect" onchange="updateApiSandboxDescription()">
+                  <option value="GET_AVAILABILITY">GET /api/x_shbs/booking/get_availability</option>
+                  <option value="POST_BOOKING">POST /api/x_shbs/booking/create_booking</option>
+                  <option value="GET_MY_BOOKINGS">GET /api/x_shbs/booking/get_user_bookings</option>
+                </select>
+              </div>
+              <div class="api-details-desc">
+                <p id="apiEndpointDescription">Fetches real-time status listings for all sports court slots on a specified date.</p>
+                <div class="headers-panel">
+                  <h5>HTTP Headers</h5>
+                  <code>Accept: application/json</code><br>
+                  <code>Content-Type: application/json</code><br>
+                  <code>Authorization: Basic YWRtaW46YWRtaW4=</code>
+                </div>
+                <div class="api-params-section" id="apiParamsContainer">
+                  <h5>Query Parameters</h5>
+                  <div class="api-param-row">
+                    <label>date:</label>
+                    <input type="text" id="apiParamDate" value="2026-07-06" class="param-input">
+                  </div>
+                  <div class="api-param-row">
+                    <label>facility_id:</label>
+                    <input type="text" id="apiParamFacilityId" value="fac-badminton" class="param-input">
+                  </div>
+                </div>
+                <div class="api-payload-section hidden" id="apiPayloadContainer">
+                  <h5>Request Body JSON</h5>
+                  <textarea id="apiRequestPayloadText">{\n  "facility_id": "fac-badminton",\n  "date": "2026-07-06",\n  "slots": ["slot-badminton-2"],\n  "purpose": "After-work tournament match",\n  "attendees": 4,\n  "approver": "john.lead@company.com"\n}</textarea>
+                </div>
+              </div>
+              <button class="btn btn-primary" onclick="executeApiSandboxRequest()"><i class="fa-solid fa-play"></i> Send API Request</button>
+            </div>
+
+            <div class="api-console-panel">
+              <div class="console-header">
+                <span>Response Console</span>
+                <span class="status-pill" id="apiConsoleStatus">Idle</span>
+              </div>
+              <div class="console-body">
+                <pre><code id="apiConsoleOutput">// Send a request to see output.</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dev Pane 6: Update Set Downloader -->
+        <div class="dev-pane" id="devPaneUpdateSet">
+          <div class="pane-intro">
+            <h3><i class="fa-solid fa-download"></i> ServiceNow Remote Update Set Download</h3>
+            <p>Download the generated ServiceNow Remote Update Set XML file. You can import this file directly into your ServiceNow Personal Developer Instance (PDI) via <strong>System Update Sets -> Retrieved Update Sets -> Import Update Set from XML</strong>.</p>
+          </div>
+
+          <div class="update-set-card">
+            <div class="update-set-icon-large">
+              <i class="fa-regular fa-file-code"></i>
+            </div>
+            <div class="update-set-meta">
+              <h4>sports_hall_booking_system_update_set.xml</h4>
+              <p>Contains all database schemas, columns, flow designer configurations, security policies, portal widgets, and scheduled scripts to deploy the Sports Hall Booking System application scope (`x_shbs`).</p>
+              
+              <ul class="meta-list">
+                <li><i class="fa-solid fa-tags"></i> Scope: <strong>x_shbs</strong></li>
+                <li><i class="fa-solid fa-code-commit"></i> Updates Contained: <strong>32 XML Payload Elements</strong></li>
+                <li><i class="fa-solid fa-circle-info"></i> Compatible versions: <strong>Washington DC, Vancouver, Utah, Tokyo</strong></li>
+              </ul>
+              
+              <button class="btn btn-primary btn-lg" onclick="downloadUpdateSetXml()"><i class="fa-solid fa-cloud-arrow-down"></i> Generate & Download Update Set XML</button>
+            </div>
+          </div>
+
+          <div class="xml-preview-panel">
+            <h4>XML Update Set Preview (First 20 lines)</h4>
+            <div class="xml-preview-container">
+              <pre><code id="updateSetXmlPreview">// Click Generate to review XML payload template...</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Notification Slide-out Panel -->
+  <div class="notification-drawer" id="notificationDrawer">
+    <div class="drawer-header">
+      <h3><i class="fa-solid fa-envelope-open-text"></i> System Notification Log</h3>
+      <button class="btn-close" id="notificationDrawerCloseBtn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="drawer-body" id="notificationDrawerBody">
+      <!-- Notifications logged here -->
+    </div>
+  </div>
+
+  <!-- Booking Details Ticket Modal -->
+  <div class="modal-overlay hidden" id="ticketModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="ticketModalTitle">ServiceNow Record Ticket</h3>
+        <button class="modal-close-btn" onclick="closeTicketModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="ticketModalBody">
+        <!-- Dyn details -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification System -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Core JavaScript Libraries -->
+  <script src="portal_widget.js"></script>
+  <script src="backend_visualizer.js"></script>
+  <script src="update_set_generator.js"></script>
+</body>
+</html>
